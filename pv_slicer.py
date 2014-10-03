@@ -1,9 +1,11 @@
+import numpy as np
+
 from glue.qt import get_qapp
-from glue.external.qt.QtCore import Qt
 from glue.external.qt.QtGui import QMainWindow
 from glue.core.application_base import Application
 
 from PyQt4.uic import loadUi
+from glue.qt.widgets.image_widget import ImageWidget, PVSliceWidget
 
 
 class PVSlicer(Application, QMainWindow):
@@ -20,10 +22,19 @@ class PVSlicer(Application, QMainWindow):
 
         self.app = get_qapp()
 
-        ui = loadUi('slicer.ui', None)
-        self.setCentralWidget(ui)
-        # self.setWindowState(Qt.WindowMaximized)
+        self.ui = loadUi('slicer.ui', None)
+        self.setCentralWidget(self.ui)
         self.resize(1024, 768)
+
+        w1 = ImageWidget(session=self._session)
+        image = np.random.random((12,12))
+        x = np.linspace(-5., 5., 12)
+        y = np.linspace(-5., 5., 12)
+
+        w2 = PVSliceWidget(image, x, y, w1)
+
+        self.ui.main_layout.addWidget(w1)
+        self.ui.main_layout.addWidget(w2)
 
     def _load_settings(self):
         pass
@@ -38,9 +49,14 @@ class PVSlicer(Application, QMainWindow):
 
     exec_ = start
 
+    def add_widget(self, new_widget, label=None, tab=None,
+                   hold_position=False):
+        sub = new_widget.mdi_wrap()
+        return sub
+
+
 
 if __name__ == "__main__":
 
-    # dc = DataCollection()
     ga = PVSlicer()
     ga.start()
