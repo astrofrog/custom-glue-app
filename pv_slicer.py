@@ -23,7 +23,7 @@ class PVSlicer(Application, QMainWindow):
 
         self.app = get_qapp()
 
-        self.ui = loadUi('slicer.ui', None)
+        self.ui = loadUi('slicer2.ui', None)
         self.setCentralWidget(self.ui)
         self.resize(1200, 800)
 
