@@ -6,7 +6,7 @@ from glue.core.application_base import Application
 
 from PyQt4.uic import loadUi
 from glue.qt.widgets.image_widget import ImageWidget, PVSliceWidget
-
+from glue.qt.qtutil import data_wizard
 
 class PVSlicer(Application, QMainWindow):
     """
@@ -36,6 +36,10 @@ class PVSlicer(Application, QMainWindow):
         self.ui.main_layout.addWidget(w1)
         self.ui.main_layout.addWidget(w2)
 
+        self.im = w1
+
+        self.ui.load_button.clicked.connect(self._load_data)
+
     def _load_settings(self):
         pass
 
@@ -53,6 +57,11 @@ class PVSlicer(Application, QMainWindow):
                    hold_position=False):
         sub = new_widget.mdi_wrap()
         return sub
+
+    def _load_data(self):
+        self.add_datasets(self.data_collection, data_wizard())
+        self.im.client.set_data(self.data_collection[0])
+        self.im.client._redraw()
 
 
 
