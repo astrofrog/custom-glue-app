@@ -23,7 +23,7 @@ class PVSlicer(Application, QMainWindow):
 
         self.app = get_qapp()
 
-        self.ui = loadUi('slicer2.ui', None)
+        self.ui = loadUi('slicer3.ui', None)
         self.setCentralWidget(self.ui)
         self.resize(1200, 800)
 
@@ -32,12 +32,12 @@ class PVSlicer(Application, QMainWindow):
         x = np.linspace(-5., 5., 12)
         y = np.linspace(-5., 5., 12)
 
-        self.slice = PVSliceWidget(image, x, y, self.image)
+        self.slice = PVSliceWidget(image_widget=self.image)
 
         self.image._slice_widget = self.slice
 
-        self.ui.main_layout.addWidget(self.image)
-        self.ui.main_layout.addWidget(self.slice)
+        self.ui.data_layout.addWidget(self.image)
+        self.ui.slice_layout.addWidget(self.slice)
 
         self.ui.load_button.clicked.connect(self._load_data)
 
