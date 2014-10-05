@@ -1,12 +1,24 @@
 import numpy as np
 
 from glue.qt import get_qapp
-from glue.external.qt.QtGui import QMainWindow
+from glue.external.qt.QtGui import QMainWindow, QWidget, QSizePolicy, QStackedWidget
 from glue.core.application_base import Application
 
 from PyQt4.uic import loadUi
-from glue.qt.widgets.image_widget import ImageWidget, PVSliceWidget
+from glue.qt.widgets.image_widget import ImageWidget as GlueImageWidget, PVSliceWidget
 from glue.qt.qtutil import data_wizard
+
+class ImageWidget(GlueImageWidget):
+
+    def __init__(self, *args, **kwargs):
+        pv_callback = kwargs.pop('pv_callback')
+        super(ImageWidget, self).__init__(*args, **kwargs)
+        self.pv_callback = pv_callback
+
+    def _extract_slice(self, roi):
+        super(ImageWidget, self)._extract_slice(roi)
+        if self.pv_callback is not None:
+            self.pv_callback(1)
 
 
 class PVSlicer(Application, QMainWindow):
@@ -23,21 +35,29 @@ class PVSlicer(Application, QMainWindow):
 
         self.app = get_qapp()
 
-        self.ui = loadUi('slicer3.ui', None)
+        self.ui = loadUi('slicer4.ui', None)
         self.setCentralWidget(self.ui)
         self.resize(1200, 800)
 
-        self.image = ImageWidget(session=self._session)
-        image = np.random.random((12,12))
-        x = np.linspace(-5., 5., 12)
-        y = np.linspace(-5., 5., 12)
+        self.box1 = QStackedWidget()
+        self.box2 = QStackedWidget()
 
-        self.slice = PVSliceWidget(image_widget=self.image)
+        self.image = ImageWidget(session=self._session, pv_callback=self.box2.setCurrentIndex)
 
+        self.slice = PVSliceWidget(np.array([[0., 1.], [2., 3.]]), np.array([0., 1.]), np.array([0., 1.]), image_widget=self.image)
         self.image._slice_widget = self.slice
 
-        self.ui.data_layout.addWidget(self.image)
-        self.ui.slice_layout.addWidget(self.slice)
+        self.dummy1 = QWidget()
+        self.dummy2 = QWidget()
+
+        self.box1.addWidget(self.dummy1)
+        self.box1.addWidget(self.image)
+
+        self.box2.addWidget(self.dummy2)
+        self.box2.addWidget(self.slice)
+
+        self.ui.data_layout.addWidget(self.box1, stretch=1)
+        self.ui.data_layout.addWidget(self.box2, stretch=1)
 
         self.ui.load_button.clicked.connect(self._load_data)
 
@@ -48,6 +68,8 @@ class PVSlicer(Application, QMainWindow):
 
         self.add_datasets(self.data_collection, data_wizard())
         self.image.add_data(self.data_collection[0])
+
+        self.box1.setCurrentIndex(1)
 
     def start(self):
         """
