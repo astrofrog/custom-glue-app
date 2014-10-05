@@ -1,12 +1,15 @@
 import numpy as np
 
 from glue.qt import get_qapp
-from glue.external.qt.QtGui import QMainWindow, QWidget, QSizePolicy, QStackedWidget
+from glue.external.qt.QtGui import QMainWindow, QWidget, QSizePolicy, QStackedWidget, QFileDialog
 from glue.core.application_base import Application
 
 from PyQt4.uic import loadUi
 from glue.qt.widgets.image_widget import ImageWidget as GlueImageWidget, PVSliceWidget
 from glue.qt.qtutil import data_wizard
+
+from astropy.io import fits
+
 
 class ImageWidget(GlueImageWidget):
 
@@ -60,13 +63,33 @@ class PVSlicer(Application, QMainWindow):
         self.ui.data_layout.addWidget(self.box2, stretch=1)
 
         self.ui.load_button.clicked.connect(self._load_data)
+        self.ui.save_button.clicked.connect(self._save_data)
+
+    def _save_data(self):
+
+        fname, fltr = QFileDialog.getSaveFileName(caption="Select an output filename",
+                                                  filter='FITS mask (*.fits);; Fits mask (*.fits)')
+        fname = str(fname)
+        if not fname:
+            return
+
+        # TODO: need glue to save WCS
+        pv_slice = self.slice._im_array
+
+        fits.writeto(fname, pv_slice, clobber=True)
+
 
     def _load_data(self):
 
         for data in list(self.data_collection):
             self.data_collection.remove(data)
 
-        self.add_datasets(self.data_collection, data_wizard())
+        data = data_wizard()
+
+        if not data:
+            return
+
+        self.add_datasets(self.data_collection, data)
         self.image.add_data(self.data_collection[0])
 
         self.box1.setCurrentIndex(1)
