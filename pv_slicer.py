@@ -38,7 +38,7 @@ class PVSlicer(Application, QMainWindow):
 
         self.app = get_qapp()
 
-        self.ui = loadUi('slicer4.ui', None)
+        self.ui = loadUi('slicer5.ui', None)
         self.setCentralWidget(self.ui)
         self.resize(1200, 800)
 
@@ -93,6 +93,8 @@ class PVSlicer(Application, QMainWindow):
         self.image.add_data(self.data_collection[0])
 
         self.box1.setCurrentIndex(1)
+
+        self.ui.top_bar.insertWidget(1,self.image.ui.slice._slices[0]._ui_slider)
 
     def start(self):
         """
