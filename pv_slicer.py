@@ -1,27 +1,16 @@
 import numpy as np
 
 from glue.qt import get_qapp
-from glue.external.qt.QtGui import QMainWindow, QWidget, QSizePolicy, QStackedWidget, QFileDialog
+from glue.external.qt.QtGui import QMainWindow, QWidget, QStackedWidget, QFileDialog
 from glue.core.application_base import Application
 
 from PyQt4.uic import loadUi
-from glue.qt.widgets.image_widget import ImageWidget as GlueImageWidget, PVSliceWidget
+from glue.qt.widgets.image_widget import ImageWidget
+from glue.plugins.pv_slicer import PVSliceWidget, PVSlicerTool as GluePVSlicerTool
 from glue.qt.qtutil import data_wizard
 
 from astropy.io import fits
-
-
-class ImageWidget(GlueImageWidget):
-
-    def __init__(self, *args, **kwargs):
-        pv_callback = kwargs.pop('pv_callback')
-        super(ImageWidget, self).__init__(*args, **kwargs)
-        self.pv_callback = pv_callback
-
-    def _extract_slice(self, roi):
-        super(ImageWidget, self)._extract_slice(roi)
-        if self.pv_callback is not None:
-            self.pv_callback(1)
+from glue import config
 
 
 class PVSlicer(Application, QMainWindow):
@@ -42,13 +31,28 @@ class PVSlicer(Application, QMainWindow):
         self.setCentralWidget(self.ui)
         self.resize(1200, 800)
 
-        self.box1 = QStackedWidget()
-        self.box2 = QStackedWidget()
+        box1 = QStackedWidget()
+        box2 = QStackedWidget()
 
-        self.image = ImageWidget(session=self._session, pv_callback=self.box2.setCurrentIndex)
+        class PVSlicerTool(GluePVSlicerTool):
 
-        self.slice = PVSliceWidget(np.array([[0., 1.], [2., 3.]]), np.array([0., 1.]), np.array([0., 1.]), image_widget=self.image)
-        self.image._slice_widget = self.slice
+            def _extract_pv_slice(self, path, widget, roi):
+                super(PVSlicerTool, self)._extract_pv_slice(path, widget, roi)
+                box2.setCurrentIndex(1)
+
+        self.box1 = box1
+        self.box2 = box2
+        
+        config.tool_registry.members.clear()
+        config.tool_registry.members.append(PVSlicerTool)
+
+        self.image = ImageWidget(session=self._session)
+        
+        self.slice = PVSliceWidget(image=np.array([[0., 1.], [2., 3.]]), wcs=None, image_widget=self.image)
+        
+        for tool in self.image._tools:
+            if isinstance(tool, PVSlicerTool):
+                tool._slice_widget = self.slice
 
         self.dummy1 = QWidget()
         self.dummy2 = QWidget()
