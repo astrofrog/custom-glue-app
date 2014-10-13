@@ -75,6 +75,7 @@ class PVSlicer(Application, QMainWindow):
         fname, fltr = QFileDialog.getSaveFileName(caption="Select an output filename",
                                                   filter='FITS mask (*.fits);; Fits mask (*.fits)')
         fname = str(fname)
+
         if not fname:
             return
 
@@ -110,19 +111,6 @@ class PVSlicer(Application, QMainWindow):
         return self.app.exec_()
 
     exec_ = start
-
-    # TODO: the following are needed to run, but don't do anything useful. Make
-    # it so that they are not required.
-
-    def add_widget(self, new_widget, label=None, tab=None,
-                   hold_position=False):
-        sub = new_widget.mdi_wrap()
-        return sub
-
-    def _load_settings(self):
-        pass
-
-
 
 
 if __name__ == "__main__":
