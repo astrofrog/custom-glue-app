@@ -5,12 +5,11 @@ from glue.external.qt.QtGui import QMainWindow, QWidget, QStackedWidget, QFileDi
 from glue.core.application_base import Application
 
 from PyQt4.uic import loadUi
-from glue.qt.widgets.image_widget import ImageWidget
+from glue.qt.widgets.image_widget import ImageWidget as GlueImageWidget
 from glue.plugins.pv_slicer import PVSliceWidget, PVSlicerTool as GluePVSlicerTool
 from glue.qt.qtutil import data_wizard
 
 from astropy.io import fits
-from glue import config
 
 
 class PVSlicer(Application, QMainWindow):
@@ -36,20 +35,22 @@ class PVSlicer(Application, QMainWindow):
 
         class PVSlicerTool(GluePVSlicerTool):
 
-            def _extract_pv_slice(self, path, widget, roi):
-                super(PVSlicerTool, self)._extract_pv_slice(path, widget, roi)
+            def _extract_pv_slice(self, mode):
+                super(PVSlicerTool, self)._extract_pv_slice(mode)
                 box2.setCurrentIndex(1)
+
+        class ImageWidget(GlueImageWidget):
+
+            def _setup_tools(self):
+                self._tools = [PVSlicerTool(self)]
 
         self.box1 = box1
         self.box2 = box2
-        
-        config.tool_registry.members.clear()
-        config.tool_registry.members.append(PVSlicerTool)
 
         self.image = ImageWidget(session=self._session)
-        
-        self.slice = PVSliceWidget(image=np.array([[0., 1.], [2., 3.]]), wcs=None, image_widget=self.image)
-        
+
+        self.slice = PVSliceWidget(image_widget=self.image)
+
         for tool in self.image._tools:
             if isinstance(tool, PVSlicerTool):
                 tool._slice_widget = self.slice
